@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Busca de Arquivos - Lojas Alvorada</title>
   <style>
     * { box-sizing: border-box; }
@@ -22,7 +23,7 @@
       height: auto;
     }
 
-    h1 { 
+    h1 {
       text-align: center;
       margin-top: 0;
       margin-bottom: 30px;
@@ -54,6 +55,7 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      transition: background 0.3s ease;
     }
 
     button:hover {
@@ -82,6 +84,11 @@
       margin-bottom: 8px;
     }
 
+    .item video {
+      max-height: 200px;
+      object-fit: cover;
+    }
+
     .filename {
       font-size: 14px;
       word-break: break-word;
@@ -105,7 +112,6 @@
   </style>
 </head>
 <body>
-  <!-- Logo no topo -->
   <div class="logo-container">
     <img src="https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/MARCA%20COLORIDA.png" alt="Logo Lojas Alvorada">
   </div>
@@ -114,22 +120,21 @@
   <div class="search-container">
     <input type="text" id="searchInput" placeholder="Digite o código do produto" 
       onkeydown="if(event.key === 'Enter'){ searchFiles(); }">
-    <button onclick="searchFiles()">Buscar</button>
+    <button onclick="searchFiles()">🔍 Buscar</button>
     <button id="downloadAllBtn" class="hidden" onclick="downloadAll()">⬇️ Baixar Todos</button>
   </div>
 
-  <div id="loading" class="loading hidden">🔄 Carregando arquivos...</div>
+  <div id="loading" class="loading hidden">
+    <img src="https://i.imgur.com/llF5iyg.gif" alt="Carregando..." style="width:40px;height:40px;"><br>
+    Carregando arquivos...
+  </div>
   <div id="noResults" class="no-results hidden">Nenhum arquivo encontrado para esse código.</div>
   <div class="grid" id="results"></div>
 
   <script>
-    const API_KEY = '0e90e287-1f58-4bbf-865c452c8a71-c2fd-4bf2'; // Read-only
-    const DOWNLOAD_KEY = '332bd0a4-616d-406f-bf94-2681d25cdef36e448d9d-0728-42f0-a15c-79c62c536946';
-    const STORAGE_URL = 'https://br.storage.bunnycdn.com';
+    const PROXY_URL = 'https://bunny-proxy.onrender.com'; // URL do seu proxy
     const PUBLIC_URL = 'https://lojasalvorada.b-cdn.net';
-    const ZONE = 'fotossite';
     const PATHS = ['Fprodutos', 'VideosProdutos/Videos YT', 'VideosProdutos/Videos ML'];
-
     let currentMatches = [];
 
     async function searchFiles() {
@@ -153,17 +158,8 @@
 
       for (const path of PATHS) {
         try {
-          const url = `${STORAGE_URL}/${ZONE}/${encodeURIComponentPath(path)}/`;
-          const res = await fetch(url, {
-            method: 'GET',
-            headers: {
-              'AccessKey': API_KEY,
-              'accept': 'application/json'
-            }
-          });
-
-          if (!res.ok) throw new Error(`Erro ao acessar: ${path}`);
-
+          const res = await fetch(`${PROXY_URL}/list?path=${encodeURIComponent(path)}`);
+          if (!res.ok) throw new Error('Erro ao buscar arquivos');
           const files = await res.json();
           const matches = files.filter(file => file.ObjectName.toLowerCase().includes(query));
 
@@ -177,7 +173,6 @@
             item.className = 'item';
 
             const fileUrl = `${PUBLIC_URL}/${filePath}`;
-            // const fileApiUrl = `${STORAGE_URL}/${ZONE}/${encodeURIComponentPath(filePath)}`;
 
             if (isImage) {
               item.innerHTML += `<img src="${fileUrl}" alt="${file.ObjectName}">`;
@@ -189,7 +184,7 @@
 
             item.innerHTML += `
               <div class="filename">${file.ObjectName}</div>
-              <button onclick="downloadFile('${filePath}')">⬇️ Baixar</button>
+              <button onclick="downloadFile('${encodeURIComponent(filePath)}', this)">⬇️ Baixar</button>
             `;
 
             resultsEl.appendChild(item);
@@ -210,34 +205,30 @@
       }
     }
 
-    function encodeURIComponentPath(path) {
-      return path.split('/').map(encodeURIComponent).join('/');
-    }
+    function downloadFile(encodedPath, btn = null) {
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Baixando...';
+      }
 
-    function downloadFile(filePath) {
-      const url = `${STORAGE_URL}/${ZONE}/${encodeURIComponentPath(filePath)}`;
-      fetch(url, {
-        method: 'GET',
-        headers: {
-          'AccessKey': DOWNLOAD_KEY
-        }
-      })
-      .then(response => response.blob())
-      .then(blob => {
-        const a = document.createElement('a');
-        const fileName = filePath.split('/').pop();
-        a.href = window.URL.createObjectURL(blob);
-        a.download = fileName;
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      })
-      .catch(error => console.error('Erro no download:', error));
+      const a = document.createElement('a');
+      a.href = `${PROXY_URL}/download?path=${encodedPath}`;
+      a.download = '';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      if (btn) {
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = '⬇️ Baixar';
+        }, 2000);
+      }
     }
 
     function downloadAll() {
-      currentMatches.forEach(downloadFile);
+      currentMatches.forEach(path => downloadFile(encodeURIComponent(path)));
     }
   </script>
 </body>
