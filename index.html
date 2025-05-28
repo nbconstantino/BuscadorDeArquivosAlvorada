@@ -1,442 +1,203 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Busca de Arquivos - Lojas Alvorada</title>
-  <link rel="icon" href="https://lojasalvorada.b-cdn.net/Logos%20Loja/Incon/icon.ico" type="image/x-icon" />
   <style>
-    /* Reset e base */
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 20px;
-      background: #f5f7fa;
-      color: #222;
-      transition: background 0.3s, color 0.3s;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      background: #f9f9f9;
     }
 
-    /* Container */
-    .container {
-      width: 100%;
-      max-width: 960px;
-    }
-
-    /* Logo */
     .logo-container {
       text-align: center;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
+
     .logo-container img {
-      max-width: 180px;
+      max-width: 200px;
       height: auto;
-      user-select: none;
-      filter: drop-shadow(0 0 0.2rem #0002);
-      transition: filter 0.3s;
-    }
-    .logo-container img:hover {
-      filter: drop-shadow(0 0 0.4rem #007bffaa);
     }
 
     h1 {
       text-align: center;
       margin-top: 0;
       margin-bottom: 30px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      color: #004085;
     }
 
-    /* Search area */
     .search-container {
       display: flex;
       justify-content: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 30px;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 30px;
     }
-    input[type="text"] {
-      padding: 14px 18px;
+
+    input {
+      padding: 12px;
       font-size: 16px;
-      width: 320px;
-      max-width: 100%;
-      border: 2px solid #007bff;
-      border-radius: 10px;
-      outline-offset: 2px;
-      transition: border-color 0.3s;
-      color: #222;
+      width: 300px;
+      max-width: 90%;
+      border: 1px solid #ccc;
+      border-radius: 8px;
     }
-    input[type="text"]:focus {
-      border-color: #0056b3;
-      box-shadow: 0 0 8px #0056b3aa;
-    }
+
     button {
-      padding: 14px 22px;
+      padding: 12px 18px;
       font-size: 16px;
       background-color: #007bff;
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
-      font-weight: 600;
-      user-select: none;
-      transition: background-color 0.3s, box-shadow 0.3s;
-      min-width: 130px;
     }
-    button:hover:not(:disabled) {
+
+    button:hover {
       background-color: #0056b3;
-      box-shadow: 0 4px 12px #0056b355;
-    }
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      box-shadow: none;
     }
 
-    #downloadAllBtn {
-      background-color: #28a745;
-    }
-    #downloadAllBtn:hover {
-      background-color: #1e7e34;
-    }
-
-    /* Grid de resultados */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 22px;
-      padding: 10px 5px;
-      width: 100%;
+      gap: 20px;
+      padding: 10px;
     }
 
     .item {
       background: white;
-      padding: 12px;
-      border-radius: 14px;
-      box-shadow: 0 3px 10px rgb(0 0 0 / 0.1);
-      text-align: center;
-      transition: box-shadow 0.3s;
-      user-select: none;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      height: 280px;
-    }
-    .item:hover {
-      box-shadow: 0 8px 20px rgb(0 0 0 / 0.15);
-    }
-    .item img,
-    .item video {
-      max-width: 100%;
-      max-height: 170px;
-      margin-bottom: 10px;
+      padding: 10px;
       border-radius: 10px;
-      object-fit: contain;
-      background: #ddd;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-align: center;
     }
-    .filename {
-      font-size: 15px;
-      font-weight: 600;
-      color: #444;
+
+    .item img, .item video {
+      max-width: 100%;
+      height: auto;
+      border-radius: 6px;
       margin-bottom: 8px;
-      overflow-wrap: break-word;
-      flex-grow: 1;
     }
-    .item button {
-      margin-top: auto;
+
+    .filename {
       font-size: 14px;
-      background-color: #007bff;
-      padding: 8px;
-      border-radius: 8px;
-    }
-    .item button:hover {
-      background-color: #0056b3;
+      word-break: break-word;
+      margin: 5px 0;
     }
 
-    /* Mensagem de carregando */
-    #loading {
-      margin: 30px auto 0;
-      width: 64px;
-      height: 64px;
-      border: 6px solid #cfd0d1;
-      border-top-color: #007bff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
+    .hidden { display: none; }
+
+    .loading {
+      text-align: center;
+      font-size: 18px;
+      color: #777;
     }
 
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* Mensagem sem resultados */
     .no-results {
       text-align: center;
       font-size: 18px;
-      color: #d9534f;
-      margin-top: 40px;
-      font-weight: 600;
-    }
-
-    /* Modo Escuro */
-    body.dark-theme {
-      background: #121214;
-      color: #ddd;
-    }
-    body.dark-theme h1 {
-      color: #66aaff;
-    }
-    body.dark-theme input[type="text"] {
-      background: #1e1e22;
-      border-color: #66aaff;
-      color: #ddd;
-    }
-    body.dark-theme input[type="text"]:focus {
-      border-color: #aaccff;
-      box-shadow: 0 0 8px #aaccffbb;
-    }
-    body.dark-theme button {
-      background-color: #4477ff;
-      color: #eee;
-      box-shadow: none;
-    }
-    body.dark-theme button:hover:not(:disabled) {
-      background-color: #2255ee;
-      box-shadow: 0 4px 12px #2255eeaa;
-    }
-    body.dark-theme #downloadAllBtn {
-      background-color: #2ca02c;
-    }
-    body.dark-theme #downloadAllBtn:hover {
-      background-color: #1f7e1f;
-    }
-    body.dark-theme .item {
-      background: #1f1f27;
-      box-shadow: 0 3px 10px rgb(255 255 255 / 0.05);
-    }
-    body.dark-theme .item:hover {
-      box-shadow: 0 8px 20px rgb(255 255 255 / 0.1);
-    }
-    body.dark-theme .filename {
-      color: #ddd;
-    }
-    body.dark-theme .item img,
-    body.dark-theme .item video {
-      background: #333;
-    }
-    body.dark-theme #loading {
-      border: 6px solid #555;
-      border-top-color: #66aaff;
-    }
-
-    /* Botão de toggle tema */
-    #themeToggle {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background-color: #007bff;
-      border: none;
-      color: white;
-      padding: 10px 14px;
-      border-radius: 50px;
-      cursor: pointer;
-      font-weight: 600;
-      box-shadow: 0 3px 10px rgb(0 123 255 / 0.5);
-      transition: background-color 0.3s;
-      user-select: none;
-      z-index: 999;
-    }
-    #themeToggle:hover {
-      background-color: #0056b3;
-      box-shadow: 0 5px 15px rgb(0 86 179 / 0.7);
-    }
-
-    /* Responsividade */
-    @media (max-width: 480px) {
-      .search-container {
-        flex-direction: column;
-        gap: 15px;
-      }
-      input[type="text"] {
-        width: 100%;
-      }
-      button {
-        width: 100%;
-        min-width: unset;
-      }
-      .item {
-        height: auto;
-      }
+      color: red;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <button id="themeToggle" title="Alternar tema">Tema Escuro</button>
-
-  <div class="container">
-    <div class="logo-container">
-      <img
-        src="https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/MARCA%20COLORIDA.png"
-        alt="Logo Lojas Alvorada"
-        draggable="false"
-      />
-    </div>
-
-    <h1>Buscar Arquivos de Produtos</h1>
-
-    <div class="search-container">
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="Digite o código do produto"
-        onkeydown="if(event.key === 'Enter'){ searchFiles(); }"
-        autocomplete="off"
-        spellcheck="false"
-      />
-      <button id="searchBtn" onclick="searchFiles()">Buscar</button>
-      <button id="downloadAllBtn" class="hidden" onclick="downloadAll()">⬇️ Baixar Todos</button>
-    </div>
-
-    <div id="loading" class="hidden" aria-live="polite" aria-busy="true" role="status"></div>
-    <div id="noResults" class="no-results hidden" role="alert">Nenhum arquivo encontrado para esse código.</div>
-
-    <div class="grid" id="results" aria-live="polite"></div>
+  <div class="logo-container">
+    <img src="https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/MARCA%20COLORIDA.png" alt="Logo Lojas Alvorada">
   </div>
+
+  <h1>Buscar Arquivos de Produtos</h1>
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Digite o código do produto"
+      onkeydown="if(event.key === 'Enter'){ searchFiles(); }">
+    <button onclick="searchFiles()">Buscar</button>
+    <button id="downloadAllBtn" class="hidden" onclick="downloadAll()">⬇️ Baixar Todos</button>
+  </div>
+
+  <div id="loading" class="loading hidden">🔄 Carregando arquivos...</div>
+  <div id="noResults" class="no-results hidden">Nenhum arquivo encontrado para esse código.</div>
+  <div class="grid" id="results"></div>
 
   <script>
     const PROXY_URL = 'https://bunny-proxy.onrender.com';
     const PUBLIC_URL = 'https://lojasalvorada.b-cdn.net';
     const PATHS = ['Fprodutos', 'VideosProdutos/Videos YT', 'VideosProdutos/Videos ML'];
 
-    const resultsEl = document.getElementById('results');
-    const loadingEl = document.getElementById('loading');
-    const noResultsEl = document.getElementById('noResults');
-    const downloadAllBtn = document.getElementById('downloadAllBtn');
-    const searchBtn = document.getElementById('searchBtn');
-    const searchInput = document.getElementById('searchInput');
-
     let currentMatches = [];
 
-    // Função para codificar caminho corretamente
-    function encodeURIComponentPath(path) {
-      return path.split('/').map(encodeURIComponent).join('/');
-    }
-
-    // Cache simples por query no sessionStorage
-    function getCache(query) {
-      try {
-        const cacheRaw = sessionStorage.getItem('searchCache');
-        if (!cacheRaw) return null;
-        const cache = JSON.parse(cacheRaw);
-        return cache[query] || null;
-      } catch {
-        return null;
-      }
-    }
-    function setCache(query, results) {
-      try {
-        const cacheRaw = sessionStorage.getItem('searchCache');
-        const cache = cacheRaw ? JSON.parse(cacheRaw) : {};
-        cache[query] = results;
-        sessionStorage.setItem('searchCache', JSON.stringify(cache));
-      } catch {
-        // Fail silently
-      }
-    }
-
     async function searchFiles() {
-      const query = searchInput.value.trim().toLowerCase();
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      const resultsEl = document.getElementById('results');
+      const loadingEl = document.getElementById('loading');
+      const noResultsEl = document.getElementById('noResults');
+      const downloadAllBtn = document.getElementById('downloadAllBtn');
+
       resultsEl.innerHTML = '';
       currentMatches = [];
+      loadingEl.classList.remove('hidden');
       noResultsEl.classList.add('hidden');
       downloadAllBtn.classList.add('hidden');
-      loadingEl.classList.remove('hidden');
-      searchBtn.disabled = true;
-      searchInput.disabled = true;
 
       if (!query) {
-        alert('Digite um termo para buscar.');
-        loadingEl.classList.add('hidden');
-        searchBtn.disabled = false;
-        searchInput.disabled = false;
-        return;
-      }
-
-      // Tenta pegar do cache
-      const cached = getCache(query);
-      if (cached) {
-        renderResults(cached);
-        searchBtn.disabled = false;
-        searchInput.disabled = false;
+        alert("Digite um termo para buscar.");
         loadingEl.classList.add('hidden');
         return;
       }
 
-      try {
-        for (const path of PATHS) {
+      for (const path of PATHS) {
+        try {
           const res = await fetch(`${PROXY_URL}/list?path=${encodeURIComponent(path)}`);
           if (!res.ok) throw new Error('Erro ao buscar arquivos');
           const files = await res.json();
           const matches = files.filter(file => file.ObjectName.toLowerCase().includes(query));
+
           matches.forEach(file => {
-            currentMatches.push(`${path}/${file.ObjectName}`);
+            const ext = file.ObjectName.split('.').pop().toLowerCase();
+            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+            const isVideo = ['mp4', 'webm', 'mov'].includes(ext);
+            const filePath = `${path}/${file.ObjectName}`;
+
+            const item = document.createElement('div');
+            item.className = 'item';
+
+            const fileUrl = `${PUBLIC_URL}/${encodeURIComponentPath(filePath)}`;
+
+            if (isImage) {
+              item.innerHTML += `<img src="${fileUrl}" alt="${file.ObjectName}">`;
+            } else if (isVideo) {
+              item.innerHTML += `<video src="${fileUrl}" controls muted></video>`;
+            } else {
+              item.innerHTML += `<div>Arquivo: ${ext}</div>`;
+            }
+
+            item.innerHTML += `
+              <div class="filename">${file.ObjectName}</div>
+              <button onclick="downloadFile('${encodeURIComponent(filePath)}')">⬇️ Baixar</button>
+            `;
+
+            resultsEl.appendChild(item);
+            currentMatches.push(filePath);
           });
+
+        } catch (err) {
+          console.error(err);
         }
-        setCache(query, currentMatches);
-        renderResults(currentMatches);
-      } catch (err) {
-        console.error(err);
-        alert('Erro ao buscar arquivos. Tente novamente mais tarde.');
-      } finally {
-        loadingEl.classList.add('hidden');
-        searchBtn.disabled = false;
-        searchInput.disabled = false;
+      }
+
+      loadingEl.classList.add('hidden');
+
+      if (currentMatches.length === 0) {
+        noResultsEl.classList.remove('hidden');
+      } else {
+        downloadAllBtn.classList.remove('hidden');
       }
     }
 
-    function renderResults(matches) {
-      resultsEl.innerHTML = '';
-      if (matches.length === 0) {
-        noResultsEl.classList.remove('hidden');
-        downloadAllBtn.classList.add('hidden');
-        return;
-      }
-
-      matches.forEach(filePath => {
-        const fileName = filePath.split('/').pop();
-        const ext = fileName.split('.').pop().toLowerCase();
-        const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
-        const isVideo = ['mp4', 'webm', 'mov'].includes(ext);
-        const fileUrl = `${PUBLIC_URL}/${encodeURIComponentPath(filePath)}`;
-
-        const item = document.createElement('div');
-        item.className = 'item';
-
-        if (isImage) {
-          item.innerHTML += `<img src="${fileUrl}" alt="${fileName}" loading="lazy" draggable="false">`;
-        } else if (isVideo) {
-          item.innerHTML += `<video src="${fileUrl}" controls muted preload="metadata" loading="lazy" draggable="false"></video>`;
-        } else {
-          item.innerHTML += `<div>Arquivo: ${ext.toUpperCase()}</div>`;
-        }
-
-        item.innerHTML += `
-          <div class="filename" title="${fileName}">${fileName}</div>
-          <button onclick="downloadFile('${encodeURIComponent(filePath)}')">⬇️ Baixar</button>
-        `;
-
-        resultsEl.appendChild(item);
-      });
-
-      downloadAllBtn.classList.remove('hidden');
+    function encodeURIComponentPath(path) {
+      return path.split('/').map(encodeURIComponent).join('/');
     }
 
     function downloadFile(encodedPath) {
@@ -452,27 +213,6 @@
     function downloadAll() {
       currentMatches.forEach(path => downloadFile(encodeURIComponent(path)));
     }
-
-    // Tema escuro toggle
-    const themeToggle = document.getElementById('themeToggle');
-    function applyTheme(theme) {
-      if (theme === 'dark') {
-        document.body.classList.add('dark-theme');
-        themeToggle.textContent = 'Tema Claro';
-      } else {
-        document.body.classList.remove('dark-theme');
-        themeToggle.textContent = 'Tema Escuro';
-      }
-      localStorage.setItem('theme', theme);
-    }
-    // Carregar tema salvo ou padrão
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    applyTheme(savedTheme);
-
-    themeToggle.addEventListener('click', () => {
-      const current = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
-      applyTheme(current === 'dark' ? 'light' : 'dark');
-    });
   </script>
 </body>
 </html>
