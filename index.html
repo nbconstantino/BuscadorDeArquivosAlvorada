@@ -1,46 +1,15 @@
 <!DOCTYPE html>
-<html lang="pt-br" data-theme="light">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8">
   <title>Busca de Arquivos - Lojas Alvorada</title>
-  <link rel="icon" href="https://lojasalvorada.b-cdn.net/Logos%20Loja/Incon/icon.ico" type="image/x-icon">
   <style>
-    :root {
-      --bg-light: #f9f9f9;
-      --text-light: #111;
-      --card-light: #fff;
-
-      --bg-dark: #121212;
-      --text-dark: #eaeaea;
-      --card-dark: #1e1e1e;
-
-      --primary: #007bff;
-      --primary-hover: #0056b3;
-    }
-
-    [data-theme="light"] {
-      --bg: var(--bg-light);
-      --text: var(--text-light);
-      --card: var(--card-light);
-    }
-
-    [data-theme="dark"] {
-      --bg: var(--bg-dark);
-      --text: var(--text-dark);
-      --card: var(--card-dark);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 20px;
-      background: var(--bg);
-      color: var(--text);
-      transition: background 0.3s, color 0.3s;
+      background: #f9f9f9;
     }
 
     .logo-container {
@@ -49,9 +18,8 @@
     }
 
     .logo-container img {
-      max-width: 220px;
+      max-width: 200px;
       height: auto;
-      transition: opacity 0.3s;
     }
 
     h1 {
@@ -76,32 +44,20 @@
       max-width: 90%;
       border: 1px solid #ccc;
       border-radius: 8px;
-      background-color: var(--card);
-      color: var(--text);
     }
 
     button {
       padding: 12px 18px;
       font-size: 16px;
-      background-color: var(--primary);
+      background-color: #007bff;
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: background-color 0.3s;
     }
 
     button:hover {
-      background-color: var(--primary-hover);
-    }
-
-    .theme-toggle {
-      position: absolute;
-      top: 15px;
-      right: 20px;
-      padding: 8px 12px;
-      font-size: 14px;
-      background-color: #444;
+      background-color: #0056b3;
     }
 
     .grid {
@@ -112,12 +68,11 @@
     }
 
     .item {
-      background: var(--card);
+      background: white;
       padding: 10px;
       border-radius: 10px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       text-align: center;
-      transition: background 0.3s;
     }
 
     .item img, .item video {
@@ -137,22 +92,8 @@
 
     .loading {
       text-align: center;
-      margin: 40px 0;
-    }
-
-    .loader {
-      border: 6px solid #f3f3f3;
-      border-top: 6px solid #007bff;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      margin: auto;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      font-size: 18px;
+      color: #777;
     }
 
     .no-results {
@@ -164,14 +105,11 @@
   </style>
 </head>
 <body>
-  <button class="theme-toggle" onclick="toggleTheme()">🌓 Modo Escuro</button>
-
   <div class="logo-container">
-    <img id="logo" src="https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/MARCA%20COLORIDA.png" alt="Logo Lojas Alvorada">
+    <img src="https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/MARCA%20COLORIDA.png" alt="Logo Lojas Alvorada">
   </div>
 
   <h1>Buscar Arquivos de Produtos</h1>
-
   <div class="search-container">
     <input type="text" id="searchInput" placeholder="Digite o código do produto"
       onkeydown="if(event.key === 'Enter'){ searchFiles(); }">
@@ -179,10 +117,7 @@
     <button id="downloadAllBtn" class="hidden" onclick="downloadAll()">⬇️ Baixar Todos</button>
   </div>
 
-  <div id="loading" class="loading hidden">
-    <div class="loader"></div>
-  </div>
-
+  <div id="loading" class="loading hidden">🔄 Carregando arquivos...</div>
   <div id="noResults" class="no-results hidden">Nenhum arquivo encontrado para esse código.</div>
   <div class="grid" id="results"></div>
 
@@ -190,7 +125,6 @@
     const PROXY_URL = 'https://bunny-proxy.onrender.com';
     const PUBLIC_URL = 'https://lojasalvorada.b-cdn.net';
     const PATHS = ['Fprodutos', 'VideosProdutos/Videos YT', 'VideosProdutos/Videos ML'];
-    const logo = document.getElementById('logo');
 
     let currentMatches = [];
 
@@ -225,10 +159,11 @@
             const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
             const isVideo = ['mp4', 'webm', 'mov'].includes(ext);
             const filePath = `${path}/${file.ObjectName}`;
-            const fileUrl = `${PUBLIC_URL}/${encodeURIComponentPath(filePath)}`;
 
             const item = document.createElement('div');
             item.className = 'item';
+
+            const fileUrl = `${PUBLIC_URL}/${encodeURIComponentPath(filePath)}`;
 
             if (isImage) {
               item.innerHTML += `<img src="${fileUrl}" alt="${file.ObjectName}">`;
@@ -277,15 +212,6 @@
 
     function downloadAll() {
       currentMatches.forEach(path => downloadFile(encodeURIComponent(path)));
-    }
-
-    function toggleTheme() {
-      const html = document.documentElement;
-      const isDark = html.getAttribute('data-theme') === 'dark';
-      html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-      logo.src = isDark
-        ? "https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/MARCA%20COLORIDA.png"
-        : "https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/LOGO%20BRANCA%20COM%20ESCRITA.png";
     }
   </script>
 </body>
