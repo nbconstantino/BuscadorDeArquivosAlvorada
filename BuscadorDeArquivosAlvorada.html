@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Busca de Arquivos - Lojas Alvorada</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+
+    .logo-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .logo-container img {
+      max-width: 200px;
+      height: auto;
+    }
+
+    h1 { 
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 30px;
+    }
+
+    .search-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    input {
+      padding: 12px;
+      font-size: 16px;
+      width: 300px;
+      max-width: 90%;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    button {
+      padding: 12px 18px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
+      padding: 10px;
+    }
+
+    .item {
+      background: white;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .item img, .item video {
+      max-width: 100%;
+      height: auto;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .filename {
+      font-size: 14px;
+      word-break: break-word;
+      margin: 5px 0;
+    }
+
+    .hidden { display: none; }
+
+    .loading {
+      text-align: center;
+      font-size: 18px;
+      color: #777;
+    }
+
+    .no-results {
+      text-align: center;
+      font-size: 18px;
+      color: red;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Logo no topo -->
+  <div class="logo-container">
+    <img src="https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/MARCA%20COLORIDA.png" alt="Logo Lojas Alvorada">
+  </div>
+
+  <h1>Buscar Arquivos de Produtos</h1>
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Digite o código do produto" 
+      onkeydown="if(event.key === 'Enter'){ searchFiles(); }">
+    <button onclick="searchFiles()">Buscar</button>
+    <button id="downloadAllBtn" class="hidden" onclick="downloadAll()">⬇️ Baixar Todos</button>
+  </div>
+
+  <div id="loading" class="loading hidden">🔄 Carregando arquivos...</div>
+  <div id="noResults" class="no-results hidden">Nenhum arquivo encontrado para esse código.</div>
+  <div class="grid" id="results"></div>
+
+  <script>
+    const API_KEY = '0e90e287-1f58-4bbf-865c452c8a71-c2fd-4bf2'; // Read-only
+    const DOWNLOAD_KEY = '332bd0a4-616d-406f-bf94-2681d25cdef36e448d9d-0728-42f0-a15c-79c62c536946';
+    const STORAGE_URL = 'https://br.storage.bunnycdn.com';
+    const PUBLIC_URL = 'https://lojasalvorada.b-cdn.net';
+    const ZONE = 'fotossite';
+    const PATHS = ['Fprodutos', 'VideosProdutos/Videos YT', 'VideosProdutos/Videos ML'];
+
+    let currentMatches = [];
+
+    async function searchFiles() {
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      const resultsEl = document.getElementById('results');
+      const loadingEl = document.getElementById('loading');
+      const noResultsEl = document.getElementById('noResults');
+      const downloadAllBtn = document.getElementById('downloadAllBtn');
+
+      resultsEl.innerHTML = '';
+      currentMatches = [];
+      loadingEl.classList.remove('hidden');
+      noResultsEl.classList.add('hidden');
+      downloadAllBtn.classList.add('hidden');
+
+      if (!query) {
+        alert("Digite um termo para buscar.");
+        loadingEl.classList.add('hidden');
+        return;
+      }
+
+      for (const path of PATHS) {
+        try {
+          const url = `${STORAGE_URL}/${ZONE}/${encodeURIComponentPath(path)}/`;
+          const res = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'AccessKey': API_KEY,
+              'accept': 'application/json'
+            }
+          });
+
+          if (!res.ok) throw new Error(`Erro ao acessar: ${path}`);
+
+          const files = await res.json();
+          const matches = files.filter(file => file.ObjectName.toLowerCase().includes(query));
+
+          matches.forEach(file => {
+            const ext = file.ObjectName.split('.').pop().toLowerCase();
+            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+            const isVideo = ['mp4', 'webm', 'mov'].includes(ext);
+            const filePath = `${path}/${file.ObjectName}`;
+
+            const item = document.createElement('div');
+            item.className = 'item';
+
+            const fileUrl = `${PUBLIC_URL}/${filePath}`;
+            // const fileApiUrl = `${STORAGE_URL}/${ZONE}/${encodeURIComponentPath(filePath)}`;
+
+            if (isImage) {
+              item.innerHTML += `<img src="${fileUrl}" alt="${file.ObjectName}">`;
+            } else if (isVideo) {
+              item.innerHTML += `<video src="${fileUrl}" controls muted></video>`;
+            } else {
+              item.innerHTML += `<div>Arquivo: ${ext}</div>`;
+            }
+
+            item.innerHTML += `
+              <div class="filename">${file.ObjectName}</div>
+              <button onclick="downloadFile('${filePath}')">⬇️ Baixar</button>
+            `;
+
+            resultsEl.appendChild(item);
+            currentMatches.push(filePath);
+          });
+
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      loadingEl.classList.add('hidden');
+
+      if (currentMatches.length === 0) {
+        noResultsEl.classList.remove('hidden');
+      } else {
+        downloadAllBtn.classList.remove('hidden');
+      }
+    }
+
+    function encodeURIComponentPath(path) {
+      return path.split('/').map(encodeURIComponent).join('/');
+    }
+
+    function downloadFile(filePath) {
+      const url = `${STORAGE_URL}/${ZONE}/${encodeURIComponentPath(filePath)}`;
+      fetch(url, {
+        method: 'GET',
+        headers: {
+          'AccessKey': DOWNLOAD_KEY
+        }
+      })
+      .then(response => response.blob())
+      .then(blob => {
+        const a = document.createElement('a');
+        const fileName = filePath.split('/').pop();
+        a.href = window.URL.createObjectURL(blob);
+        a.download = fileName;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      })
+      .catch(error => console.error('Erro no download:', error));
+    }
+
+    function downloadAll() {
+      currentMatches.forEach(downloadFile);
+    }
+  </script>
+</body>
+</html>
