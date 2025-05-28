@@ -1,125 +1,281 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Busca de Arquivos - Lojas Alvorada</title>
+  <link rel="icon" href="https://lojasalvorada.b-cdn.net/Logos%20Loja/Incon/icon.ico" type="image/x-icon" />
   <style>
-    * { box-sizing: border-box; }
+    /* Reset e base */
+    * {
+      box-sizing: border-box;
+    }
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 20px;
-      background: #f9f9f9;
+      background: var(--bg);
+      color: var(--text);
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
+    :root {
+      --bg: #f9f9f9;
+      --text: #222;
+      --card-bg: #fff;
+      --btn-bg: #007bff;
+      --btn-hover: #0056b3;
+      --border-color: #ccc;
+      --shadow: rgba(0,0,0,0.1);
+    }
+    .dark-theme {
+      --bg: #121212;
+      --text: #e1e1e1;
+      --card-bg: #1e1e1e;
+      --btn-bg: #0a84ff;
+      --btn-hover: #005ecb;
+      --border-color: #444;
+      --shadow: rgba(0,0,0,0.5);
+    }
+
+    /* Container da logo */
     .logo-container {
       text-align: center;
       margin-bottom: 20px;
     }
-
     .logo-container img {
       max-width: 200px;
       height: auto;
+      filter: var(--logo-filter);
+      transition: filter 0.3s ease;
+    }
+    .dark-theme .logo-container img {
+      filter: brightness(0.9);
     }
 
+    /* Título */
     h1 {
       text-align: center;
       margin-top: 0;
       margin-bottom: 30px;
+      font-weight: 700;
+      font-size: 1.9rem;
     }
 
+    /* Controles de busca */
     .search-container {
       display: flex;
       justify-content: center;
       align-items: center;
       flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
     }
-
     input {
       padding: 12px;
       font-size: 16px;
       width: 300px;
-      max-width: 90%;
-      border: 1px solid #ccc;
+      max-width: 100%;
+      border: 1px solid var(--border-color);
       border-radius: 8px;
+      background: var(--card-bg);
+      color: var(--text);
+      transition: border-color 0.3s ease;
     }
-
+    input:focus {
+      outline: none;
+      border-color: var(--btn-bg);
+      box-shadow: 0 0 5px var(--btn-bg);
+    }
     button {
       padding: 12px 18px;
       font-size: 16px;
-      background-color: #007bff;
+      background-color: var(--btn-bg);
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover:not(:disabled) {
+      background-color: var(--btn-hover);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
-    button:hover {
-      background-color: #0056b3;
+    /* Botão tema */
+    #themeToggle {
+      background: transparent;
+      color: var(--btn-bg);
+      border: 2px solid var(--btn-bg);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    #themeToggle:hover {
+      background-color: var(--btn-bg);
+      color: white;
     }
 
+    /* Grid de resultados */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
       gap: 20px;
       padding: 10px;
     }
-
     .item {
-      background: white;
+      background: var(--card-bg);
       padding: 10px;
       border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 6px var(--shadow);
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 260px;
+      transition: transform 0.2s ease;
     }
-
+    .item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 15px var(--shadow);
+    }
     .item img, .item video {
       max-width: 100%;
       height: auto;
       border-radius: 6px;
       margin-bottom: 8px;
+      flex-grow: 1;
+      object-fit: contain;
     }
 
     .filename {
       font-size: 14px;
       word-break: break-word;
-      margin: 5px 0;
+      margin: 5px 0 10px;
+      font-weight: 600;
+      color: var(--text);
     }
 
-    .hidden { display: none; }
+    /* Esconder elementos */
+    .hidden {
+      display: none;
+    }
 
-    .loading {
+    /* Loading animado */
+    #loading {
       text-align: center;
-      font-size: 18px;
-      color: #777;
+      margin: 20px 0;
+    }
+    .loader {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid var(--btn-bg);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
     }
 
+    /* Mensagem sem resultados */
     .no-results {
       text-align: center;
       font-size: 18px;
       color: red;
       margin-top: 20px;
+      font-weight: 600;
+    }
+
+    /* Paginação */
+    .pagination-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin: 25px 0 0;
+      flex-wrap: wrap;
+    }
+    .pagination-btn {
+      background-color: var(--btn-bg);
+      border: none;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+    }
+    .pagination-btn[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .pagination-btn:hover:not([disabled]) {
+      background-color: var(--btn-hover);
+    }
+
+    /* Select itens por página */
+    #itemsPerPageSelect {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--card-bg);
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.3s ease;
+    }
+    #itemsPerPageSelect:hover {
+      border-color: var(--btn-bg);
+      box-shadow: 0 0 5px var(--btn-bg);
     }
   </style>
 </head>
 <body>
   <div class="logo-container">
-    <img src="https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/MARCA%20COLORIDA.png" alt="Logo Lojas Alvorada">
+    <img src="https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/MARCA%20COLORIDA.png" alt="Logo Lojas Alvorada" />
   </div>
 
-  <h1>Buscar Arquivos de Produtos</h1>
   <div class="search-container">
-    <input type="text" id="searchInput" placeholder="Digite o código do produto"
-      onkeydown="if(event.key === 'Enter'){ searchFiles(); }">
-    <button onclick="searchFiles()">Buscar</button>
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Digite o código do produto"
+      onkeydown="if(event.key === 'Enter'){ searchFiles(); }"
+      autocomplete="off"
+      aria-label="Busca por código do produto"
+    />
+    <button id="searchBtn" onclick="searchFiles()">Buscar</button>
     <button id="downloadAllBtn" class="hidden" onclick="downloadAll()">⬇️ Baixar Todos</button>
+    <button id="themeToggle" aria-label="Alternar tema claro/escuro">Tema Escuro</button>
   </div>
 
-  <div id="loading" class="loading hidden">🔄 Carregando arquivos...</div>
+  <div id="loading" class="hidden">
+    <div class="loader"></div>
+  </div>
+
   <div id="noResults" class="no-results hidden">Nenhum arquivo encontrado para esse código.</div>
+
   <div class="grid" id="results"></div>
+
+  <div class="pagination-container hidden" id="paginationControls">
+    <button id="prevPage" class="pagination-btn">Anterior</button>
+    <span id="pageInfo"></span>
+    <button id="nextPage" class="pagination-btn">Próximo</button>
+    <select id="itemsPerPageSelect" aria-label="Itens por página">
+      <option value="10">10 por página</option>
+      <option value="20">20 por página</option>
+      <option value="30">30 por página</option>
+      <option value="50">50 por página</option>
+      <option value="100">100 por página</option>
+      <option value="1000">1000 por página</option>
+    </select>
+  </div>
 
   <script>
     const PROXY_URL = 'https://bunny-proxy.onrender.com';
@@ -127,79 +283,29 @@
     const PATHS = ['Fprodutos', 'VideosProdutos/Videos YT', 'VideosProdutos/Videos ML'];
 
     let currentMatches = [];
+    let currentPage = 1;
+    let itemsPerPage = 10;
 
-    async function searchFiles() {
-      const query = document.getElementById('searchInput').value.trim().toLowerCase();
-      const resultsEl = document.getElementById('results');
-      const loadingEl = document.getElementById('loading');
-      const noResultsEl = document.getElementById('noResults');
-      const downloadAllBtn = document.getElementById('downloadAllBtn');
+    // Elementos
+    const resultsEl = document.getElementById('results');
+    const loadingEl = document.getElementById('loading');
+    const noResultsEl = document.getElementById('noResults');
+    const downloadAllBtn = document.getElementById('downloadAllBtn');
+    const paginationControls = document.getElementById('paginationControls');
+    const prevPageBtn = document.getElementById('prevPage');
+    const nextPageBtn = document.getElementById('nextPage');
+    const pageInfo = document.getElementById('pageInfo');
+    const itemsPerPageSelect = document.getElementById('itemsPerPageSelect');
+    const searchBtn = document.getElementById('searchBtn');
+    const searchInput = document.getElementById('searchInput');
+    const themeToggle = document.getElementById('themeToggle');
 
-      resultsEl.innerHTML = '';
-      currentMatches = [];
-      loadingEl.classList.remove('hidden');
-      noResultsEl.classList.add('hidden');
-      downloadAllBtn.classList.add('hidden');
-
-      if (!query) {
-        alert("Digite um termo para buscar.");
-        loadingEl.classList.add('hidden');
-        return;
-      }
-
-      for (const path of PATHS) {
-        try {
-          const res = await fetch(`${PROXY_URL}/list?path=${encodeURIComponent(path)}`);
-          if (!res.ok) throw new Error('Erro ao buscar arquivos');
-          const files = await res.json();
-          const matches = files.filter(file => file.ObjectName.toLowerCase().includes(query));
-
-          matches.forEach(file => {
-            const ext = file.ObjectName.split('.').pop().toLowerCase();
-            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
-            const isVideo = ['mp4', 'webm', 'mov'].includes(ext);
-            const filePath = `${path}/${file.ObjectName}`;
-
-            const item = document.createElement('div');
-            item.className = 'item';
-
-            const fileUrl = `${PUBLIC_URL}/${encodeURIComponentPath(filePath)}`;
-
-            if (isImage) {
-              item.innerHTML += `<img src="${fileUrl}" alt="${file.ObjectName}">`;
-            } else if (isVideo) {
-              item.innerHTML += `<video src="${fileUrl}" controls muted></video>`;
-            } else {
-              item.innerHTML += `<div>Arquivo: ${ext}</div>`;
-            }
-
-            item.innerHTML += `
-              <div class="filename">${file.ObjectName}</div>
-              <button onclick="downloadFile('${encodeURIComponent(filePath)}')">⬇️ Baixar</button>
-            `;
-
-            resultsEl.appendChild(item);
-            currentMatches.push(filePath);
-          });
-
-        } catch (err) {
-          console.error(err);
-        }
-      }
-
-      loadingEl.classList.add('hidden');
-
-      if (currentMatches.length === 0) {
-        noResultsEl.classList.remove('hidden');
-      } else {
-        downloadAllBtn.classList.remove('hidden');
-      }
-    }
-
+    // Helper para codificar path (URL encoding separado por barras)
     function encodeURIComponentPath(path) {
       return path.split('/').map(encodeURIComponent).join('/');
     }
 
+    // Download individual
     function downloadFile(encodedPath) {
       const a = document.createElement('a');
       a.href = `${PROXY_URL}/download?path=${encodedPath}`;
@@ -210,9 +316,192 @@
       document.body.removeChild(a);
     }
 
+    // Download todos visíveis
     function downloadAll() {
-      currentMatches.forEach(path => downloadFile(encodeURIComponent(path)));
+      // Baixa só arquivos da página atual para não travar o browser
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      currentMatches.slice(start, end).forEach(path => downloadFile(encodeURIComponent(path)));
     }
+
+    // Renderiza página atual
+    function renderPage() {
+      resultsEl.innerHTML = '';
+      noResultsEl.classList.add('hidden');
+
+      if (currentMatches.length === 0) {
+        noResultsEl.classList.remove('hidden');
+        downloadAllBtn.classList.add('hidden');
+        paginationControls.classList.add('hidden');
+        return;
+      }
+
+      downloadAllBtn.classList.remove('hidden');
+
+      // Paginação
+      const totalPages = Math.ceil(currentMatches.length / itemsPerPage);
+      currentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = Math.min(startIndex + itemsPerPage, currentMatches.length);
+
+      const pageItems = currentMatches.slice(startIndex, endIndex);
+
+      pageItems.forEach(filePath => {
+        const fileName = filePath.split('/').pop();
+        const ext = fileName.split('.').pop().toLowerCase();
+        const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+        const isVideo = ['mp4', 'webm', 'mov'].includes(ext);
+        const fileUrl = `${PUBLIC_URL}/${encodeURIComponentPath(filePath)}`;
+
+        const item = document.createElement('div');
+        item.className = 'item';
+
+        if (isImage) {
+          item.innerHTML += `<img src="${fileUrl}" alt="${fileName}" loading="lazy">`;
+        } else if (isVideo) {
+          item.innerHTML += `<video src="${fileUrl}" controls muted loading="lazy"></video>`;
+        } else {
+          item.innerHTML += `<div>Arquivo: ${ext.toUpperCase()}</div>`;
+        }
+
+        item.innerHTML += `
+          <div class="filename" title="${fileName}">${fileName}</div>
+          <button onclick="downloadFile('${encodeURIComponent(filePath)}')">⬇️ Baixar</button>
+        `;
+
+        resultsEl.appendChild(item);
+      });
+
+      // Atualiza controles de paginação
+      paginationControls.classList.toggle('hidden', totalPages <= 1);
+      pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+      prevPageBtn.disabled = currentPage <= 1;
+      nextPageBtn.disabled = currentPage >= totalPages;
+    }
+
+    // Cache simples em sessionStorage para buscas
+    // Salva e lê array de paths por query (minúsculo)
+    function getCache(query) {
+      const cacheRaw = sessionStorage.getItem('searchCache');
+      if (!cacheRaw) return null;
+      try {
+        const cache = JSON.parse(cacheRaw);
+        return cache[query] || null;
+      } catch {
+        return null;
+      }
+    }
+    function setCache(query, results) {
+      const cacheRaw = sessionStorage.getItem('searchCache');
+      let cache = {};
+      try {
+        cache = cacheRaw ? JSON.parse(cacheRaw) : {};
+      } catch {
+        cache = {};
+      }
+      cache[query] = results;
+      sessionStorage.setItem('searchCache', JSON.stringify(cache));
+    }
+
+    // Busca arquivos e carrega resultados
+    async function searchFiles() {
+      const query = searchInput.value.trim().toLowerCase();
+
+      resultsEl.innerHTML = '';
+      currentMatches = [];
+      currentPage = 1;
+      downloadAllBtn.classList.add('hidden');
+      paginationControls.classList.add('hidden');
+      noResultsEl.classList.add('hidden');
+
+      if (!query) {
+        alert("Digite um termo para buscar.");
+        return;
+      }
+
+      // Tenta carregar do cache
+      const cached = getCache(query);
+      if (cached) {
+        currentMatches = cached;
+        renderPage();
+        return;
+      }
+
+      loadingEl.classList.remove('hidden');
+      searchBtn.disabled = true;
+
+      try {
+        for (const path of PATHS) {
+          const res = await fetch(`${PROXY_URL}/list?path=${encodeURIComponent(path)}`);
+          if (!res.ok) throw new Error('Erro ao buscar arquivos');
+          const files = await res.json();
+          const matches = files.filter(file => file.ObjectName.toLowerCase().includes(query));
+          currentMatches.push(...matches.map(file => `${path}/${file.ObjectName}`));
+        }
+        // Salva cache só se deu certo
+        setCache(query, currentMatches);
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao buscar arquivos. Tente novamente mais tarde.');
+      } finally {
+        loadingEl.classList.add('hidden');
+        searchBtn.disabled = false;
+      }
+
+      renderPage();
+    }
+
+    // Paginação
+    prevPageBtn.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderPage();
+        scrollToTopResults();
+      }
+    });
+    nextPageBtn.addEventListener('click', () => {
+      const totalPages = Math.ceil(currentMatches.length / itemsPerPage);
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderPage();
+        scrollToTopResults();
+      }
+    });
+
+    // Mudar itens por página
+    itemsPerPageSelect.addEventListener('change', e => {
+      itemsPerPage = parseInt(e.target.value, 10);
+      currentPage = 1;
+      renderPage();
+      scrollToTopResults();
+    });
+
+    // Scroll suave para resultados ao trocar página
+    function scrollToTopResults() {
+      resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Tema dark/light toggle
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.body.classList.add('dark-theme');
+        themeToggle.textContent = 'Tema Claro';
+      } else {
+        document.body.classList.remove('dark-theme');
+        themeToggle.textContent = 'Tema Escuro';
+      }
+      localStorage.setItem('theme', theme);
+    }
+    // Carregar tema salvo ou padrão claro
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    applyTheme(savedTheme);
+
+    themeToggle.addEventListener('click', () => {
+      const current = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+    });
   </script>
 </body>
 </html>
