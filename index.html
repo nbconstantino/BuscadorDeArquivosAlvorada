@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
   <title>Busca de Arquivos - Lojas Alvorada</title>
   <style>
     * { box-sizing: border-box; }
@@ -12,23 +11,19 @@
       padding: 20px;
       background: #f9f9f9;
     }
-
     .logo-container {
       text-align: center;
       margin-bottom: 20px;
     }
-
     .logo-container img {
       max-width: 200px;
       height: auto;
     }
-
     h1 {
       text-align: center;
       margin-top: 0;
       margin-bottom: 30px;
     }
-
     .search-container {
       display: flex;
       justify-content: center;
@@ -37,7 +32,6 @@
       gap: 10px;
       margin-bottom: 30px;
     }
-
     input {
       padding: 12px;
       font-size: 16px;
@@ -46,7 +40,6 @@
       border: 1px solid #ccc;
       border-radius: 8px;
     }
-
     button {
       padding: 12px 18px;
       font-size: 16px;
@@ -55,20 +48,16 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: background 0.3s ease;
     }
-
     button:hover {
       background-color: #0056b3;
     }
-
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
       gap: 20px;
       padding: 10px;
     }
-
     .item {
       background: white;
       padding: 10px;
@@ -76,33 +65,23 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       text-align: center;
     }
-
     .item img, .item video {
       max-width: 100%;
       height: auto;
       border-radius: 6px;
       margin-bottom: 8px;
     }
-
-    .item video {
-      max-height: 200px;
-      object-fit: cover;
-    }
-
     .filename {
       font-size: 14px;
       word-break: break-word;
       margin: 5px 0;
     }
-
     .hidden { display: none; }
-
     .loading {
       text-align: center;
       font-size: 18px;
       color: #777;
     }
-
     .no-results {
       text-align: center;
       font-size: 18px;
@@ -113,28 +92,29 @@
 </head>
 <body>
   <div class="logo-container">
-    <img src="https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/MARCA%20COLORIDA.png" alt="Logo Lojas Alvorada">
+    <img src="https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/MARCA%20COLORIDA.png" alt="Logo Lojas Alvorada" />
   </div>
 
   <h1>Buscar Arquivos de Produtos</h1>
   <div class="search-container">
-    <input type="text" id="searchInput" placeholder="Digite o código do produto" 
-      onkeydown="if(event.key === 'Enter'){ searchFiles(); }">
-    <button onclick="searchFiles()">🔍 Buscar</button>
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Digite o código do produto"
+      onkeydown="if(event.key === 'Enter'){ searchFiles(); }"
+    />
+    <button onclick="searchFiles()">Buscar</button>
     <button id="downloadAllBtn" class="hidden" onclick="downloadAll()">⬇️ Baixar Todos</button>
   </div>
 
-  <div id="loading" class="loading hidden">
-    <img src="https://i.imgur.com/llF5iyg.gif" alt="Carregando..." style="width:40px;height:40px;"><br>
-    Carregando arquivos...
-  </div>
+  <div id="loading" class="loading hidden">🔄 Carregando arquivos...</div>
   <div id="noResults" class="no-results hidden">Nenhum arquivo encontrado para esse código.</div>
   <div class="grid" id="results"></div>
 
   <script>
-    const PROXY_URL = 'https://bunny-proxy.onrender.com'; // URL do seu proxy
-    const PUBLIC_URL = 'https://lojasalvorada.b-cdn.net';
-    const PATHS = ['Fprodutos', 'VideosProdutos/Videos%20YT', 'VideosProdutos/Videos%20ML'];
+    const PROXY_URL = 'https://bunny-proxy.onrender.com';
+    const PUBLIC_URL = 'https://br.storage.bunnycdn.com/fotossite';
+    const PATHS = ['Fprodutos', 'VideosProdutos/Videos YT']; // Ajuste conforme o que for listado na sua Storage
     let currentMatches = [];
 
     async function searchFiles() {
@@ -161,6 +141,8 @@
           const res = await fetch(`${PROXY_URL}/list?path=${encodeURIComponent(path)}`);
           if (!res.ok) throw new Error('Erro ao buscar arquivos');
           const files = await res.json();
+
+          // Bunny Storage API retorna um array com objetos que possuem ObjectName
           const matches = files.filter(file => file.ObjectName.toLowerCase().includes(query));
 
           matches.forEach(file => {
@@ -172,19 +154,17 @@
             const item = document.createElement('div');
             item.className = 'item';
 
-            const fileUrl = `${PUBLIC_URL}/${filePath}`;
-
             if (isImage) {
-              item.innerHTML += `<img src="${fileUrl}" alt="${file.ObjectName}">`;
+              item.innerHTML += `<img src="${PUBLIC_URL}/${encodeURIComponent(filePath)}" alt="${file.ObjectName}">`;
             } else if (isVideo) {
-              item.innerHTML += `<video src="${fileUrl}" controls muted></video>`;
+              item.innerHTML += `<video src="${PUBLIC_URL}/${encodeURIComponent(filePath)}" controls muted></video>`;
             } else {
               item.innerHTML += `<div>Arquivo: ${ext}</div>`;
             }
 
             item.innerHTML += `
               <div class="filename">${file.ObjectName}</div>
-              <button onclick="downloadFile('${encodeURIComponent(filePath)}', this)">⬇️ Baixar</button>
+              <button onclick="downloadFile('${encodeURIComponent(filePath)}')">⬇️ Baixar</button>
             `;
 
             resultsEl.appendChild(item);
@@ -205,12 +185,7 @@
       }
     }
 
-    function downloadFile(encodedPath, btn = null) {
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = '⏳ Baixando...';
-      }
-
+    function downloadFile(encodedPath) {
       const a = document.createElement('a');
       a.href = `${PROXY_URL}/download?path=${encodedPath}`;
       a.download = '';
@@ -218,13 +193,6 @@
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-
-      if (btn) {
-        setTimeout(() => {
-          btn.disabled = false;
-          btn.textContent = '⬇️ Baixar';
-        }, 2000);
-      }
     }
 
     function downloadAll() {
