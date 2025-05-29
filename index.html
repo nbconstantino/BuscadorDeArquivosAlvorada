@@ -211,7 +211,12 @@
     }
 
     function downloadAll() {
-      currentMatches.forEach(path => downloadFile(encodeURIComponent(path)));
+      for (let i = 0; i < currentMatches.length; i++) {
+        const encodedPath = encodeURIComponent(currentMatches[i]);
+        setTimeout(() => {
+          window.open(`${PROXY_URL}/download?path=${encodedPath}`, '_blank');
+        }, i * 500);
+      }
     }
   </script>
 </body>
