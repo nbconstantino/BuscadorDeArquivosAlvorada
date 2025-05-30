@@ -1,223 +1,44 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Busca de Arquivos - Lojas Alvorada</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #f9f9f9;
-    }
-
-    .logo-container {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .logo-container img {
-      max-width: 200px;
-      height: auto;
-    }
-
-    h1 {
-      text-align: center;
-      margin-top: 0;
-      margin-bottom: 30px;
-    }
-
-    .search-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 30px;
-    }
-
-    input {
-      padding: 12px;
-      font-size: 16px;
-      width: 300px;
-      max-width: 90%;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-
-    button {
-      padding: 12px 18px;
-      font-size: 16px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 20px;
-      padding: 10px;
-    }
-
-    .item {
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-
-    .item img, .item video {
-      max-width: 100%;
-      height: auto;
-      border-radius: 6px;
-      margin-bottom: 8px;
-    }
-
-    .filename {
-      font-size: 14px;
-      word-break: break-word;
-      margin: 5px 0;
-    }
-
-    .hidden { display: none; }
-
-    .loading {
-      text-align: center;
-      font-size: 18px;
-      color: #777;
-    }
-
-    .no-results {
-      text-align: center;
-      font-size: 18px;
-      color: red;
-      margin-top: 20px;
-    }
-  </style>
+  <link rel="icon" href="https://lojasalvorada.b-cdn.net/Logos%20Loja/Incon/icon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="logo-container">
-    <img src="https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/MARCA%20COLORIDA.png" alt="Logo Lojas Alvorada">
+  <div class="top-bar">
+    <div class="logo-container">
+      <img src="https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/MARCA%20COLORIDA.png" alt="Logo Lojas Alvorada" />
+    </div>
+    <button id="darkModeToggle" onclick="toggleDarkMode()">🌙 Modo Escuro</button>
   </div>
 
   <h1>Buscar Arquivos de Produtos</h1>
+
   <div class="search-container">
     <input type="text" id="searchInput" placeholder="Digite o código do produto"
-      onkeydown="if(event.key === 'Enter'){ searchFiles(); }">
+      onkeydown="if(event.key === 'Enter'){ searchFiles(); }" />
+    <select id="fileTypeFilter">
+      <option value="">Todos os tipos</option>
+      <option value=".jpg">.jpg</option>
+      <option value=".png">.png</option>
+      <option value=".mp4">.mp4</option>
+      <option value=".mov">.mov</option>
+    </select>
     <button onclick="searchFiles()">Buscar</button>
     <button id="downloadAllBtn" class="hidden" onclick="downloadAll()">⬇️ Baixar Todos</button>
   </div>
 
-  <div id="loading" class="loading hidden">🔄 Carregando arquivos...</div>
+  <div id="loading" class="loading hidden">
+    <div class="spinner"></div>
+    <div>Carregando arquivos...</div>
+  </div>
+
   <div id="noResults" class="no-results hidden">Nenhum arquivo encontrado para esse código.</div>
   <div class="grid" id="results"></div>
 
-  <script>
-    const PROXY_URL = 'https://bunny-proxy.onrender.com';
-    const PUBLIC_URL = 'https://lojasalvorada.b-cdn.net';
-    const PATHS = ['Fprodutos', 'VideosProdutos/Videos YT', 'VideosProdutos/Videos ML'];
-
-    let currentMatches = [];
-
-    async function searchFiles() {
-      const query = document.getElementById('searchInput').value.trim().toLowerCase();
-      const resultsEl = document.getElementById('results');
-      const loadingEl = document.getElementById('loading');
-      const noResultsEl = document.getElementById('noResults');
-      const downloadAllBtn = document.getElementById('downloadAllBtn');
-
-      resultsEl.innerHTML = '';
-      currentMatches = [];
-      loadingEl.classList.remove('hidden');
-      noResultsEl.classList.add('hidden');
-      downloadAllBtn.classList.add('hidden');
-
-      if (!query) {
-        alert("Digite um termo para buscar.");
-        loadingEl.classList.add('hidden');
-        return;
-      }
-
-      for (const path of PATHS) {
-        try {
-          const res = await fetch(`${PROXY_URL}/list?path=${encodeURIComponent(path)}`);
-          if (!res.ok) throw new Error('Erro ao buscar arquivos');
-          const files = await res.json();
-          const matches = files.filter(file => file.ObjectName.toLowerCase().includes(query));
-
-          matches.forEach(file => {
-            const ext = file.ObjectName.split('.').pop().toLowerCase();
-            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
-            const isVideo = ['mp4', 'webm', 'mov'].includes(ext);
-            const filePath = `${path}/${file.ObjectName}`;
-
-            const item = document.createElement('div');
-            item.className = 'item';
-
-            const fileUrl = `${PUBLIC_URL}/${encodeURIComponentPath(filePath)}`;
-
-            if (isImage) {
-              item.innerHTML += `<img src="${fileUrl}" alt="${file.ObjectName}">`;
-            } else if (isVideo) {
-              item.innerHTML += `<video src="${fileUrl}" controls muted></video>`;
-            } else {
-              item.innerHTML += `<div>Arquivo: ${ext}</div>`;
-            }
-
-            item.innerHTML += `
-              <div class="filename">${file.ObjectName}</div>
-              <button onclick="downloadFile('${encodeURIComponent(filePath)}')">⬇️ Baixar</button>
-            `;
-
-            resultsEl.appendChild(item);
-            currentMatches.push(filePath);
-          });
-
-        } catch (err) {
-          console.error(err);
-        }
-      }
-
-      loadingEl.classList.add('hidden');
-
-      if (currentMatches.length === 0) {
-        noResultsEl.classList.remove('hidden');
-      } else {
-        downloadAllBtn.classList.remove('hidden');
-      }
-    }
-
-    function encodeURIComponentPath(path) {
-      return path.split('/').map(encodeURIComponent).join('/');
-    }
-
-    function downloadFile(encodedPath) {
-      const a = document.createElement('a');
-      a.href = `${PROXY_URL}/download?path=${encodedPath}`;
-      a.download = '';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-
-    function downloadAll() {
-      for (let i = 0; i < currentMatches.length; i++) {
-        const encodedPath = encodeURIComponent(currentMatches[i]);
-        setTimeout(() => {
-          window.open(`${PROXY_URL}/download?path=${encodedPath}`, '_blank');
-        }, i * 500);
-      }
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
