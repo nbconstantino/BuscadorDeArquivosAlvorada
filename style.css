@@ -1,131 +1,184 @@
-* { box-sizing: border-box; }
 body {
-  font-family: 'Segoe UI', sans-serif;
+  font-family: Arial, sans-serif;
   margin: 0;
-  padding: 20px;
-  background: #f9f9f9;
+  background-color: #f4f4f4;
   color: #333;
   transition: background 0.3s, color 0.3s;
 }
 
 body.dark {
-  background: #1e1e1e;
-  color: #f1f1f1;
+  background-color: #121212;
+  color: #eee;
 }
 
-.top-bar {
+header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  padding: 10px 20px;
+  background: #222;
+  color: #fff;
 }
 
-.logo-container img {
-  max-width: 200px;
-  height: auto;
+header img {
+  height: 50px;
 }
 
-h1 {
-  text-align: center;
-  margin-top: 0;
-  margin-bottom: 30px;
-}
-
-.search-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 30px;
-}
-
-input, select {
-  padding: 12px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-}
-
-button {
-  padding: 12px 18px;
-  font-size: 16px;
-  background-color: #007bff;
-  color: white;
+.controls button {
+  margin-left: 10px;
+  font-size: 1.2em;
+  background: #444;
+  color: #fff;
   border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
-
-.dark button {
-  background-color: #444;
-  color: white;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 20px;
-  padding: 10px;
-}
-
-.item {
-  background: white;
-  padding: 10px;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  text-align: center;
-  transition: background 0.3s;
-}
-
-.dark .item {
-  background: #2c2c2c;
-}
-
-.item img, .item video {
-  max-width: 100%;
-  height: auto;
-  border-radius: 6px;
-  margin-bottom: 8px;
-}
-
-.filename {
-  font-size: 14px;
-  word-break: break-word;
-  margin: 5px 0;
-}
-
-.hidden { display: none; }
-
-.loading {
-  text-align: center;
-  font-size: 18px;
-  color: #777;
-}
-
-.spinner {
-  border: 6px solid #f3f3f3;
-  border-top: 6px solid #007bff;
+  padding: 8px;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
+  cursor: pointer;
+}
+
+.controls button:hover {
+  background: #666;
+}
+
+main {
+  padding: 20px;
+  max-width: 1000px;
   margin: auto;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.search-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
 }
 
+.search-bar input,
+.search-bar select,
+.search-bar button {
+  padding: 10px;
+  font-size: 1em;
+}
+
+.loading,
 .no-results {
   text-align: center;
-  font-size: 18px;
-  color: red;
-  margin-top: 20px;
+  margin: 20px 0;
+  font-weight: bold;
+  animation: fadeIn 0.5s;
+}
+
+.hidden {
+  display: none;
+}
+
+.results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 20px;
+}
+
+.item {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  padding: 10px;
+  text-align: center;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.dark .item {
+  background: #1e1e1e;
+  box-shadow: 0 2px 6px rgba(255,255,255,0.05);
+}
+
+.item img,
+.item video {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.item .file-icon {
+  font-size: 50px;
+  margin: 20px 0;
+}
+
+.filename {
+  font-weight: bold;
+  margin: 5px 0;
+  word-break: break-all;
+}
+
+.details {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.dark .details {
+  color: #aaa;
+}
+
+.actions {
+  margin-top: 10px;
+}
+
+.actions button {
+  margin: 3px;
+  padding: 6px 12px;
+  font-size: 0.9em;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: #2196f3;
+  color: #fff;
+}
+
+.actions button:hover {
+  background-color: #0b7dda;
+}
+
+.download-all {
+  display: block;
+  margin: 30px auto;
+  font-size: 1em;
+  padding: 10px 20px;
+  background: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.download-all:hover {
+  background: #388e3c;
+}
+
+footer {
+  text-align: center;
+  padding: 10px;
+  font-size: 0.9em;
+  background: #eee;
+  margin-top: 30px;
+}
+
+.dark footer {
+  background: #1a1a1a;
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.list-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
 }

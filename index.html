@@ -1,43 +1,45 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Busca de Arquivos - Lojas Alvorada</title>
-  <link rel="icon" href="https://lojasalvorada.b-cdn.net/Logos%20Loja/Incon/icon.ico" type="image/x-icon" />
+  <link rel="icon" href="https://lojasalvorada.b-cdn.net/favicon.png" type="image/png">
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <div class="top-bar">
-    <div class="logo-container">
-      <img src="https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/MARCA%20COLORIDA.png" alt="Logo Lojas Alvorada" />
+<body class="dark">
+  <header>
+    <img id="logo" src="https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/LOGO%20BRANCA%20COM%20ESCRITA.png" alt="Logo Lojas Alvorada">
+    <div class="controls">
+      <button id="darkModeToggle">☀️</button>
+      <button id="toggleViewMode">📃 Modo Lista</button>
     </div>
-    <button id="darkModeToggle" onclick="toggleDarkMode()">🌙 Modo Escuro</button>
-  </div>
+  </header>
 
-  <h1>Buscar Arquivos de Produtos</h1>
+  <main>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Digite o código ou nome do arquivo..." />
+      <select id="fileTypeFilter">
+        <option value="">Todos os tipos</option>
+        <option value=".jpg">.jpg</option>
+        <option value=".png">.png</option>
+        <option value=".mp4">.mp4</option>
+        <option value=".pdf">.pdf</option>
+      </select>
+      <button onclick="searchFiles()">🔍 Buscar</button>
+    </div>
 
-  <div class="search-container">
-    <input type="text" id="searchInput" placeholder="Digite o código do produto"
-      onkeydown="if(event.key === 'Enter'){ searchFiles(); }" />
-    <select id="fileTypeFilter">
-      <option value="">Todos os tipos</option>
-      <option value=".jpg">.jpg</option>
-      <option value=".png">.png</option>
-      <option value=".mp4">.mp4</option>
-      <option value=".mov">.mov</option>
-    </select>
-    <button onclick="searchFiles()">Buscar</button>
-    <button id="downloadAllBtn" class="hidden" onclick="downloadAll()">⬇️ Baixar Todos</button>
-  </div>
+    <div id="loading" class="loading hidden">🔄 Buscando arquivos...</div>
+    <div id="noResults" class="no-results hidden">❌ Nenhum arquivo encontrado para esse código.</div>
 
-  <div id="loading" class="loading hidden">
-    <div class="spinner"></div>
-    <div>Carregando arquivos...</div>
-  </div>
+    <div id="results" class="results"></div>
 
-  <div id="noResults" class="no-results hidden">Nenhum arquivo encontrado para esse código.</div>
-  <div class="grid" id="results"></div>
+    <button id="downloadAllBtn" class="download-all hidden" onclick="downloadAll()">⬇️ Baixar Todos</button>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Lojas Alvorada</p>
+  </footer>
 
   <script src="script.js"></script>
 </body>

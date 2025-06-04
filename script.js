@@ -4,9 +4,54 @@ const PATHS = ['Fprodutos', 'VideosProdutos/Videos YT', 'VideosProdutos/Videos M
 
 let currentMatches = [];
 let fileCache = {};
+let isListView = false;
+
+function saveDarkModePreference(isDark) {
+  localStorage.setItem('darkMode', isDark ? 'true' : 'false');
+}
+
+function loadDarkModePreference() {
+  return localStorage.getItem('darkMode') === 'true';
+}
+
+function setDarkMode(isDark) {
+  document.body.classList.toggle('dark', isDark);
+  document.getElementById('darkModeToggle').textContent = isDark ? '☀️' : '🌙';
+  document.getElementById('logo').src = isDark
+    ? 'https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/LOGO%20BRANCA%20COM%20ESCRITA.png'
+    : 'https://lojasalvorada.b-cdn.net/Logos%20Loja/PNG/MARCA%20COLORIDA.png';
+  saveDarkModePreference(isDark);
+}
+
+function toggleDarkMode() {
+  const isDark = !document.body.classList.contains('dark');
+  setDarkMode(isDark);
+}
+
+function toggleViewMode() {
+  isListView = !isListView;
+  document.getElementById('toggleViewMode').textContent = isListView
+    ? '🖼️ Modo Galeria'
+    : '📃 Modo Lista';
+  if (currentMatches.length > 0) renderResults();
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  const mb = kb / 1024;
+  return `${mb.toFixed(1)} MB`;
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR');
+}
 
 async function searchFiles() {
-  const query = document.getElementById('searchInput').value.trim().toLowerCase();
+  const input = document.getElementById('searchInput').value.trim().toLowerCase();
+  const terms = input.split(/[,\s]+/).filter(Boolean);
   const fileType = document.getElementById('fileTypeFilter').value;
   const resultsEl = document.getElementById('results');
   const loadingEl = document.getElementById('loading');
@@ -19,7 +64,7 @@ async function searchFiles() {
   noResultsEl.classList.add('hidden');
   downloadAllBtn.classList.add('hidden');
 
-  if (!query) {
+  if (!terms.length) {
     alert("Digite um termo para buscar.");
     loadingEl.classList.add('hidden');
     return;
@@ -27,42 +72,28 @@ async function searchFiles() {
 
   for (const path of PATHS) {
     try {
-      const files = fileCache[path] || await fetch(`${PROXY_URL}/list?path=${encodeURIComponent(path)}`).then(res => res.json());
+      const files =
+        fileCache[path] ||
+        (await fetch(`${PROXY_URL}/list?path=${encodeURIComponent(path)}`).then((res) =>
+          res.json()
+        ));
+
       if (!fileCache[path]) fileCache[path] = files;
 
-      const matches = files.filter(file => {
+      const matches = files.filter((file) => {
         const name = file.ObjectName.toLowerCase();
         const ext = '.' + name.split('.').pop();
-        return name.includes(query) && (!fileType || ext === fileType);
+        return terms.some((t) => name.includes(t)) && (!fileType || ext === fileType);
       });
 
-      matches.forEach(file => {
-        const ext = file.ObjectName.split('.').pop().toLowerCase();
-        const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
-        const isVideo = ['mp4', 'webm', 'mov'].includes(ext);
-        const filePath = `${path}/${file.ObjectName}`;
-        const fileUrl = `${PUBLIC_URL}/${encodeURIComponentPath(filePath)}`;
-
-        const item = document.createElement('div');
-        item.className = 'item';
-
-        if (isImage) {
-          item.innerHTML += `<img src="${fileUrl}" alt="${file.ObjectName}">`;
-        } else if (isVideo) {
-          item.innerHTML += `<video src="${fileUrl}" controls muted></video>`;
-        } else {
-          item.innerHTML += `<div>Arquivo: ${ext}</div>`;
-        }
-
-        item.innerHTML += `
-          <div class="filename">${file.ObjectName}</div>
-          <button onclick="downloadFile('${encodeURIComponent(filePath)}')">⬇️ Baixar</button>
-        `;
-
-        resultsEl.appendChild(item);
-        currentMatches.push(filePath);
+      matches.forEach((file) => {
+        currentMatches.push({
+          path: `${path}/${file.ObjectName}`,
+          name: file.ObjectName,
+          size: file.Length,
+          date: file.LastChanged
+        });
       });
-
     } catch (err) {
       console.error(err);
     }
@@ -73,8 +104,48 @@ async function searchFiles() {
   if (currentMatches.length === 0) {
     noResultsEl.classList.remove('hidden');
   } else {
+    renderResults();
     downloadAllBtn.classList.remove('hidden');
   }
+}
+
+function renderResults() {
+  const resultsEl = document.getElementById('results');
+  resultsEl.innerHTML = '';
+
+  currentMatches.forEach((file) => {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+    const isVideo = ['mp4', 'webm', 'mov'].includes(ext);
+    const fileUrl = `${PUBLIC_URL}/${encodeURIComponentPath(file.path)}`;
+
+    const item = document.createElement('div');
+    item.className = 'item fade-in';
+    if (isListView) item.classList.add('list-item');
+
+    if (isImage) {
+      item.innerHTML += `<img src="${fileUrl}" loading="lazy" alt="${file.name}" onclick="shareWhatsApp('${fileUrl}')">`;
+    } else if (isVideo) {
+      item.innerHTML += `<video src="${fileUrl}" controls muted preload="metadata"></video>`;
+    } else {
+      item.innerHTML += `<div class="file-icon">📄</div>`;
+    }
+
+    item.innerHTML += `
+      <div class="filename">${file.name}</div>
+      <div class="details">${formatBytes(file.size)} - ${formatDate(file.date)}</div>
+      <div class="actions">
+        <button onclick="downloadFile('${encodeURIComponent(file.path)}')">⬇️ Baixar</button>
+        ${
+          window.innerWidth < 768 && isImage
+            ? `<button onclick="shareWhatsApp('${fileUrl}')">📤 Enviar</button>`
+            : ''
+        }
+      </div>
+    `;
+
+    resultsEl.appendChild(item);
+  });
 }
 
 function encodeURIComponentPath(path) {
@@ -91,19 +162,57 @@ function downloadFile(encodedPath) {
   document.body.removeChild(a);
 }
 
-function downloadAll() {
-  currentMatches.forEach((path, i) => {
-    setTimeout(() => downloadFile(encodeURIComponent(path)), i * 300);
-  });
+async function downloadAll() {
+  const files = filteredFiles || []; // arquivos filtrados da última busca
+  if (!files.length) return;
+
+  // Criar e exibir barra de progresso
+  const progressBar = document.createElement('progress');
+  progressBar.max = files.length;
+  progressBar.value = 0;
+  document.getElementById('results').prepend(progressBar);
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+
+    const link = document.createElement('a');
+    link.href = `${proxyUrl}/download?path=${encodeURIComponent(file.path)}`;
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    progressBar.value = i + 1;
+
+    await new Promise(resolve => setTimeout(resolve, 750));
+  }
+
+  progressBar.remove();
 }
 
-function toggleDarkMode() {
-  const isDark = document.body.classList.toggle('dark');
-  const btn = document.getElementById('darkModeToggle');
-  btn.textContent = isDark ? '☀️ Modo Claro' : '🌙 Modo Escuro';
+
+
+
+function shareWhatsApp(url) {
+  const msg = `Confira este arquivo: ${url}`;
+  const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(waUrl, '_blank');
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('darkModeToggle');
-  btn.textContent = document.body.classList.contains('dark') ? '☀️ Modo Claro' : '🌙 Modo Escuro';
+  setDarkMode(loadDarkModePreference());
+  document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+  document.getElementById('toggleViewMode').addEventListener('click', toggleViewMode);
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    searchFiles();
+  } else if (e.key === 'Escape') {
+    document.getElementById('results').innerHTML = '';
+    document.getElementById('downloadAllBtn').classList.add('hidden');
+  } else if (e.ctrlKey && e.key.toLowerCase() === 'd') {
+    e.preventDefault();
+    toggleDarkMode();
+  }
 });
